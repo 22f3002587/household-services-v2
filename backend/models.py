@@ -7,13 +7,11 @@ db=SQLAlchemy()
 class User(db.Model, UserMixin):
     email =db.Column(db.String(), primary_key=True)
     password =db.Column(db.String, nullable=False)
-    # flask-security-specific
     fs_uniquifier = db.Column(db.String, unique=True, nullable=False)
     active =db.Column(db.Boolean, default=True)
-
     fullname=db.Column(db.String(), nullable=False, unique=False)
+
     roles = db.relationship('Role', backref='bearers', secondary='user_roles')
-    
     
 class Role(db.Model, RoleMixin):
     id = db.Column(db.Integer, primary_key = True)
@@ -64,3 +62,5 @@ class Customer(db.Model):
     contact=db.Column(db.Integer, unique=True, nullable=False)
     pin_code=db.Column(db.Integer, nullable=False)
     status=db.Column(db.String(), default='Unblock')  
+
+    

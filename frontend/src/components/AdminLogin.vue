@@ -35,24 +35,24 @@ export default{
             async handleSubmission(){
                 this.errorMessage=''
                 try{
-                     const response = await axios.post('http://127.0.0.1:5000/admin_login', this.form)
-                    
+                    const response = await axios.post('http://127.0.0.1:5000/admin_login', this.form)
 
                     if(response.status === 200){
                         alert("Login successfully")
                     }
                      
-                    if(response.status===400){
-                        console.log(response.data)
-                    }
                 }
                 
                 catch(error){
-                    this.errorMessage=error.message
+                    if(error.response){
+                        if(error.response.status=== 400 || error.response.status=== 404){
+                            this.errorMessage=error.response.data.message
+                        }
+                    }
                 }
             }
-        }
-    }            
+        }            
+    }
 </script>
 
 <style>
@@ -92,3 +92,5 @@ input {
     margin-top: 10px;
   }
 </style>
+
+/*eslint-disable */
