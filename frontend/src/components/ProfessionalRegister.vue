@@ -30,6 +30,7 @@
     <div>
       <label for="service_name">Service Name</label>
       <select id="service_name" @change="handleSelectionChange" required>
+        <option disabled>Select Service</option>
         <option v-for="(service,index) in service_name" :key="index" >{{service}}</option>
       </select>
     </div>
@@ -103,13 +104,14 @@ export default {
       const result = await axios.get('http://127.0.0.1:5000/available_services')
 
       if(result.status === 200){
-          this.service_name = result.data.service
+          this.service_name = result.data.services
           console.log(this.service_name)
       }
       }
       catch(error){
         if(error.response && (error.response.status === 400 || error.response.status === 404)){
-          this.errorMessage='Some error occured'
+          this.errorMessage='Something went wrong'
+          console.log(error.message)
         }
       }
     },
@@ -117,7 +119,7 @@ export default {
       this.form.service_name = event.target.value
     }
   },
-  beforeMount(){
+  mounted(){
     this.fetchData()
 
   }

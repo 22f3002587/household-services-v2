@@ -5,4 +5,6 @@ class Config:
     SECURITY_PASSWORD_SALT = 'mysecretsaltwithsalt'
     SECRET_KEY= "shouldbekeptveryhidden"
     WTF_CSRF_ENABLED = False
-    SECURITY_TOKEN_AUTHENTICATION_HEADER='Authentication-Token'
+    SECURITY_TOKEN_AUTHENTICATION = True
+    SECURITY_TOKEN_AUTHENTICATION_HEADER='Authorization'
+    SECURITY_TOKEN_AUTHENTICATION_METHODS = ["Token"]
