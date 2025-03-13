@@ -29,7 +29,7 @@
 
     <div>
       <label for="service_name">Service Name</label>
-      <select id="service_name" @change="handleSelectionChange" required>
+      <select id="service_name" v-model="form.service_name" @change="handleSelectionChange" required>
         <option disabled>Select Service</option>
         <option v-for="(service,index) in service_name" :key="index" >{{service}}</option>
       </select>
@@ -49,12 +49,11 @@
       <label for="pincode">Pincode</label>
       <input type="text" id="pincode" v-model="form.pincode" required />
     </div>
-
-    <div v-if="errorMessage" class="error-message">
-      <p>{{ errorMessage }}</p>
-    </div>
+    <p style="color:red;" v-if="errorMessage">{{errorMessage}}</p>
 
     <button>Register</button>
+    <router-link :to="{name:'ProLogin'}">Login</router-link>
+    
   </form>
 </template>
 
@@ -87,7 +86,7 @@ export default {
         const response = await axios.post("http://127.0.0.1:5000/register_professional",this.form);
 
         if (response.status === 200) {
-          alert(response.data.message);
+            this.errorMessage = response.data.message
         }
 
         

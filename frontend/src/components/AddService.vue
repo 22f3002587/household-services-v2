@@ -61,6 +61,7 @@
       </table>
       <button @click="submitData">Submit</button>
       <p v-if="message">{{ message }}</p>
+      <router-link :to="{name:'AdminHome'}">Go Back</router-link>
     </div>
   </div>
 </template>

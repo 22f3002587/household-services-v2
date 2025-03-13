@@ -42,6 +42,7 @@ class Service_Request(db.Model):
     customer_id=db.Column(db.String(), db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     professional_id=db.Column(db.String(), db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     req_date=db.Column(db.DateTime, unique=False, default=dt.utcnow)
+    schedule_date=db.Column(db.DateTime, unique=False, default=dt.utcnow)
     close_date= db.Column(db.DateTime, unique=False, default=dt.utcnow)
     status=db.Column(db.String(), default='Requested')
 
@@ -54,7 +55,7 @@ class Professional(db.Model):
     service_name=db.Column(db.String(), nullable=False, unique=True)
     experience=db.Column(db.Integer)
     rating=db.Column(db.Integer, default=0)
-    address = db.Column(db.String(), unique=True, nullable=False)
+    address = db.Column(db.String(), nullable=False, unique=True)
     pin_code=db.Column(db.Integer, nullable=False)
     status=db.Column(db.String(), default="Waiting for admin approval..")    
 
@@ -63,9 +64,10 @@ class Customer(db.Model):
     __tablename__='customer'
     id=db.Column(db.Integer, primary_key=True)
     user_id=db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
+    gender=db.Column(db.String(), nullable=False)
     address=db.Column(db.String(), nullable=False, unique=True)
     contact=db.Column(db.Integer, unique=True, nullable=False)
     pin_code=db.Column(db.Integer, nullable=False)
-    status=db.Column(db.String(), default='Unblock')  
+      
 
     

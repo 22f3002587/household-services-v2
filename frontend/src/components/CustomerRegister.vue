@@ -18,6 +18,14 @@
       </div>
 
       <div class="form-group">
+        <label for="gender">Gender</label>
+        <select v-model="form.gender" style="width:83%; height:32px;">
+          <option>Male</option>
+          <option>Female</option>
+        </select>
+      </div>
+
+      <div class="form-group">
         <label for="address">Address</label>
         <input type="text" id="address" v-model="form.address" required />
       </div>
@@ -37,10 +45,11 @@
       </div>
 
       <button>Register</button>
+      <div v-if="errorMessage" class="error-message">
+        {{message}}
+      </div>
     </form>
-
     <router-link to="/customer_login">Login</router-link>
-    <router-view></router-view>
   </div>
 </template>
 
@@ -58,6 +67,7 @@ export default {
         address: "",
         contact: "",
         pincode: "",
+        gender:""
       },
       errorMessage: "",
     };
@@ -70,7 +80,16 @@ export default {
         const response = await axios.post("http://127.0.0.1:5000/register_customer",this.form);
 
         if (response.status === 200) {
-          alert(response.data.message);
+          if(this.form.contact.length !== 10){
+            this.errorMessage = "Contact number should be 10 digits";
+
+          }
+
+          if(this.form.pincode.length !== 6){
+            this.errorMessage = "Pincode should be 6 digits";
+
+          }
+          this.errorMessage = "Registration successful";
 
         }
 

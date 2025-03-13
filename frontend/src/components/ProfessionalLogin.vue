@@ -20,6 +20,8 @@
             <span>Don't have an account?</span>
             <router-link to="/pro_register">Register as professional</router-link>
         </div>
+
+        <p style="color:red;">{{$route.query.message}}</p>
         
     </div>
 </template>
@@ -45,7 +47,8 @@ export default{
                     const response = await axios.post('http://127.0.0.1:5000/login_professional', this.form)
 
                     if(response.status === 200){
-                        this.$router.push({name:'AdminHome'})
+                        localStorage.setItem('authToken',response.data.token)
+                        this.$router.push('/pro_dashboard')
                     }
                      
                 }
