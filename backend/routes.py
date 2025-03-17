@@ -2,6 +2,8 @@ from flask import request, jsonify
 from flask_security import auth_required, roles_required, current_user, hash_password, verify_password
 from backend.models import db, Services, User, Role, Professional, Customer, Service_Request
 from sqlalchemy import or_
+import uuid
+from datetime import datetime as dt, timedelta
 
 def create_routes(app):
     # Admin Routes
@@ -222,8 +224,80 @@ def create_routes(app):
     @auth_required('token')
     @roles_required('customer')
     def customer_dashboard():
-        customer = current_user
-        return jsonify({"name": customer.fullname, "email": customer.email}), 200
+        custom=Customer.query.filter_by(user_id=current_user.id).first()
+
+        serv_req_list = []
+        serv_req = Service_Request.query.filter_by(customer_id=current_user.id).all()
+        for req in serv_req:
+            pro_email = User.query.get(req.professional_id).email
+            service_name = Services.query.get(req.service_id).service_name
+            serv_req_list.append({"pro_email":pro_email, "request_id":req.request_id, "service_name": service_name, "request_date":req.req_date, "close_date":req.close_date, "schedule_date":req.schedule_date, "status":req.status})
+
+        services_list = []
+        for serv in Services.query.all():
+            services_list.append({"service_id":serv.service_id, "service_name":serv.service_name, "service_category":serv.service_category, "price":serv.base_price, "expected_time":serv.expected_time, "description":serv.description})
+
+        return jsonify({"profile":{"name": current_user.fullname, "email": current_user.email, "contact":custom.contact, "address":custom.address, "pincode":custom.pin_code},
+                        "service_req":serv_req_list, "services":services_list}), 200
+    
+
+    @app.route('/request_service', methods=['POST'])
+    @auth_required('token')
+    @roles_required('customer')
+    def request_service():
+        data = request.get_json()
+        service_id = data.get('service_id')
+        service_name = data.get('service_name')
+        pro_id = Professional.query.filter_by(service_name = service_name, status = '').first()
+        if not pro_id:
+            return jsonify({'message':'Professional not found'}), 404
+        
+        if not Service_Request.query.filter_by(service_id = service_id, customer_id = current_user.id).first():
+            serve_req = Service_Request(request_id=str(uuid.uuid4())[:4], service_id=service_id, customer_id=current_user.id, professional_id=pro_id.user_id, schedule_date=dt.utcnow() + timedelta(days=2))
+            db.session.add(serve_req)
+            db.session.commit()
+
+            serv_req = Service_Request.query.filter_by(customer_id=current_user.id, request_id = serve_req.request_id).first()
+            pro_email = User.query.get(serv_req.professional_id).email
+            service_name = Services.query.get(serv_req.service_id).service_name
+            return jsonify({'message':'Request added succesfully', "pro_email":pro_email, "request_id":serv_req.request_id, "service_name": service_name, "request_date":serv_req.req_date, "close_date":serv_req.close_date, "schedule_date":serv_req.schedule_date, "request_date":serv_req.req_date,"status":serv_req.status}), 200
+        return jsonify({'message':'Service request already exist'}),400
+
+    @app.route('/cancel_request/<string:request_id>', methods=['DELETE'])
+    @auth_required('token')
+    @roles_required('customer')
+    def cancel_request(request_id):
+        if Service_Request.query.filter_by(request_id=request_id, customer_id= current_user.id).first():
+            serv_req = Service_Request.query.filter_by(request_id=request_id).first()
+            db.session.delete(serv_req)
+            db.session.commit()
+            return jsonify({'message':'Request cancelled successfully'}), 200
+        return jsonify({'message':'Request not found'}), 404
+    
+    @app.route('/close_edit_request/<string:action>/<string:request_id>', methods=['PUT'])
+    @auth_required('token')
+    @roles_required('customer')
+    def close_edit_request(action, request_id):
+        serv_req = Service_Request.query.filter_by(request_id=request_id, customer_id =current_user.id).first()
+        if serv_req:
+            if action == 'close':
+                serv_req.status = 'Closed by customer'
+                db.session.commit()
+                return jsonify({'message':'Closed by customer'}), 200
+
+            if action == 'edit':
+                data=request.get_json()
+                schedule_date = data.get('schedule_date')
+                serv_req.schedule_date = schedule_date
+                db.session.commit()
+                return jsonify({'message':"New date scheduled successfully"}), 200
+        
+        return jsonify({'message':'Service request not found'}), 404
+
+
+            
+
+    # Professional Routes
 
     @app.route('/register_professional', methods=['POST'])
     def register_professional():

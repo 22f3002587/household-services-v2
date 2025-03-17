@@ -4,13 +4,7 @@
     <form @submit.prevent="loginCustomer">
       <div>
         <label for="email">Email:</label>
-        <input
-          type="email"
-          v-model="form.email"
-          id="email"
-          placeholder="Enter your email"
-          required
-        />
+        <input type="email" v-model="form.email" id="email" placeholder="Enter your email" required/>
       </div>
 
       <div>
@@ -25,6 +19,10 @@
       </div>
 
       <button type="submit">Login</button>
+
+      <div v-if="this.$route.query.message" class="error-message">
+        <p>{{ this.$route.query.message }}</p>
+      </div>
 
       <div v-if="errorMessage" class="error-message">
         <p>{{ errorMessage }}</p>

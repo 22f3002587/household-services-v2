@@ -3,46 +3,138 @@
     <div class="navbar">
       <h1>Welcome to Customer Dashboard</h1>
       <div class="nav-links">
-        <a href="/logout_user">Logout</a>
+        <router-link :to="{ name: 'HomePage' }" @click="logoutuser">Logout</router-link>
         <a href="/customer_search">Search</a>
         <a href="#">Home</a>
       </div>
     </div>
 
     <div class="profile">
-      <button class="prof-button" @click="toggleProfileDropdown">View Profile</button><br><br>
+      <button class="prof-button" style="background-color:black;" @click="toggleProfileDropdown">View
+        Profile</button><br><br>
       <div v-if="isProfileDropdownVisible" class="dropdown-profile-content">
-        <img src="/static/image.png" alt="user-image">
-        <h3>Hello</h3>
-        <h3>Your Email: <span>{{ user_data.email }}</span></h3>
-        <h3>Experience: </h3>
-        <h3>Specialisation:</h3>
-        <h3>Admin Approval:</h3>
+        <img style="width:100px; border-radius:116px;"
+          src="https://img.freepik.com/premium-vector/silver-membership-icon-default-avatar-profile-icon-membership-icon-social-media-user-image-vector-illustration_561158-4195.jpg?semt=ais_hybrid"
+          alt="user-image">
+        <h3>Hello {{ profile.name }}</h3>
+        <table class="profile-table">
+          <tbody>
+            <tr>
+              <td>
+                <h3>Your Email:</h3>
+              </td>
+              <td><span>{{ profile.email }}</span></td>
+            </tr>
+
+            <tr>
+              <td>
+                <h3>Phone: </h3>
+              </td>
+              <td><span>{{ profile.contact }}</span></td>
+            </tr>
+
+            <tr>
+              <td>
+                <h3>Address: </h3>
+              </td>
+              <td><span>{{ profile.address }}</span></td>
+            </tr>
+
+            <tr>
+              <td>
+                <h3>Pincode: </h3>
+              </td>
+              <td><span>{{ profile.pincode }}</span></td>
+            </tr>
+
+          </tbody>
+        </table>
       </div>
     </div><br>
 
-    <h2 style="font-size:30px; font-family:monospace;">Hello, {{ user_data.fullname }}</h2>
+    <h2 style="font-size:30px; font-family:monospace;">Hello, {{ profile.name }}</h2>
 
     <div class="services">
-      <h3 style="font-size:20px; font-family:monospace;">Looking for which service category?</h3>
-      <div v-for="category in serviceCategories" :key="category.name" class="dropdown ">
-        <button>{{ category.name }}</button>
-        <div class="dropdown-content">
-          <table v-if="category.services.length > 0">
-            <tr v-for="service in category.services" :key="service.service_id">
-              <td>{{ service.service_name }}</td>
-              <td>{{ service.description }}</td>
-              <td>Rs. {{ service.base_price }}</td>
-              <td>
-                <div>
-                  <input type="hidden" name="form_id" :value="category.name.toLowerCase()">
-                  <input type="hidden" name="service_id" :value="service.service_id">
-                  <input type="hidden" name="customer_email" :value="user_data.email">
-                  <button class="btn" type="submit">Book</button>
-                </div>
-              </td>
-            </tr>
-          </table>
+      <h3 style="font-size:20px; font-family:monospace; margin-bottom:35px;">Looking for which service category?</h3>
+      <div class="service-categories">
+        <div class="service-categories">
+          <div class="dropdown">
+            <button>Cleaning</button>
+            <div class="dropdown-content">
+              <table v-if="cleaningServices.length > 0">
+                <tr v-for="service in cleaningServices" :key="service.service_id">
+                  <td>{{ service.service_name }}</td>
+                  <td>{{ service.description }}</td>
+                  <td>Rs. {{ service.price }}</td>
+                  <td><button class="book" @click="bookService(service)" type="submit">Book</button></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="service-categories">
+          <div class="dropdown">
+            <button>Health & Wellness</button>
+            <div class="dropdown-content">
+              <table v-if="healthServices.length > 0">
+                <tr v-for="service in healthServices" :key="service.service_id">
+                  <td>{{ service.service_name }}</td>
+                  <td>{{ service.description }}</td>
+                  <td>Rs. {{ service.price }}</td>
+                  <td><button class="book" @click="bookService(service)" type="submit">Book</button></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="service-categories">
+          <div class="dropdown">
+            <button>Saloon</button>
+            <div class="dropdown-content">
+              <table v-if="saloonServices.length > 0">
+                <tr v-for="service in saloonServices" :key="service.service_id">
+                  <td>{{ service.service_name }}</td>
+                  <td>{{ service.description }}</td>
+                  <td>Rs. {{ service.price }}</td>
+                  <td><button class="book" @click="bookService(service)" type="submit">Book</button></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="service-categories">
+          <div class="dropdown">
+            <button>Home Decoration</button>
+            <div class="dropdown-content">
+              <table v-if="homedecorServices.length > 0">
+                <tr v-for="service in hServices" :key="service.service_id">
+                  <td>{{ service.service_name }}</td>
+                  <td>{{ service.description }}</td>
+                  <td>Rs. {{ service.price }}</td>
+                  <td><button class="book" @click="bookService(service)" type="submit">Book</button></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="service-categories">
+          <div class="dropdown">
+            <button>Electrician</button>
+            <div class="dropdown-content">
+              <table v-if="electricianServices.length > 0">
+                <tr v-for="service in electricianServices" :key="service.service_id">
+                  <td>{{ service.service_name }}</td>
+                  <td>{{ service.description }}</td>
+                  <td>Rs. {{ service.price }}</td>
+                  <td><button class="book" @click="bookService(service)">Book</button></td>
+                </tr>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -68,15 +160,16 @@
           <tr v-for="record in serviceRequests" :key="record.request_id">
             <td>{{ record.request_id }}</td>
             <td>{{ record.service_name }}</td>
-            <td>{{ record.professional_id }}</td>
-            <td>{{ formatDate(record.requested_date) }}</td>
-            <td>{{ formatDate(record.scheduled_date) }}</td>
+            <td>{{ record.pro_email }}</td>
+            <td>{{ formatDate(record.request_date) }}</td>
+            <td>{{ formatDate(record.schedule_date) }}</td>
             <td>{{ record.closed_date ? formatDate(record.closed_date) : 'Closing Date Pending' }}</td>
             <td>{{ record.status }}</td>
             <td>
-              <button v-if="record.status === 'Requested'" @click="handleAction(record, 'close')">Close it?</button>
-              <button v-if="record.status === 'Requested'" @click="handleAction(record, 'edit')">Edit Request</button>
-              <button v-if="record.status !== 'Professional Dismissed'" @click="handleAction(record, 'delete')" class="delete-button">Delete</button>
+              <button style="width:72px;" v-if="record.status === 'Requested'" @click="handleAction(record, 'close')">Close it?</button>
+              <button style="width:97px; margin:0 14px; background-color: cornflowerblue;" v-if="record.status === 'Requested'" @click="handleAction(record, 'edit')">Edit Request</button>
+              <button style="width:60px;" v-if="record.status === 'Requested' || record.status !== 'Closed by customer'" @click="cancelRequest(record)"
+                class="delete-button">Cancel</button>
             </td>
           </tr>
         </tbody>
@@ -87,48 +180,157 @@
 </template>
 
 <script>
+import axios from 'axios';
+axios.default.baseURL = 'http://loaclhost:5000';
+
 export default {
   data() {
     return {
-      user_data: {
-        fullname: 'John Doe',
-        email: 'johndoe@example.com',
-      },
+      profile: '',
       alert: '',
-      serviceCategories: [
-        {
-          name: 'Cleaning',
-          services: [
-            { service_id: 1, service_name: 'House Cleaning', description: 'Thorough cleaning of your house', base_price: 500 },
-            { service_id: 2, service_name: 'Office Cleaning', description: 'Office space cleaning', base_price: 1000 },
-          ],
-        },
-        {
-          name: 'Home Decoration',
-          services: [
-            { service_id: 3, service_name: 'Living Room Decor', description: 'Decorate your living room', base_price: 1500 },
-          ],
-        },
-        // Other categories...
-      ],
-      serviceRequests: [
-        { request_id: 1, service_name: 'House Cleaning', professional_id: 'P123', requested_date: new Date(), scheduled_date: new Date(), closed_date: null, status: 'Requested' },
-        { request_id: 2, service_name: 'Office Cleaning', professional_id: 'P124', requested_date: new Date(), scheduled_date: new Date(), closed_date: null, status: 'Requested' },
-      ],
+      services: [],
+      serviceRequests: [],
       isProfileDropdownVisible: false,
     };
   },
   methods: {
-    formatDate(date) {
-      return new Date(date).toLocaleDateString();
-    },
     toggleProfileDropdown() {
       this.isProfileDropdownVisible = !this.isProfileDropdownVisible;
     },
-    handleAction(record, action) {
-      console.log(`${action} action triggered for request ${record.request_id}`);
+
+    logoutuser() {
+      localStorage.removeItem('authToken')
     },
+
+    async handleAction(record, action){
+      try{
+        if(action == 'close'){
+          const close = await axios.put(`/close_edit_request/close/${record.request_id}`,{},{
+            headers:{
+              Authorization:`${localStorage.getItem('authToken')}`
+            }
+          })
+
+          if (close.status === 200) {
+            const updatedRequest = this.serviceRequests.find(request => request.request_id === record.request_id);
+            updatedRequest.status = 'Closed by customer';
+          }
+          
+        }
+
+
+        if(action == 'edit'){
+          const edit = await axios.put(`/close_edit_request/edit/${record.request_id}`,{
+            headers:{
+              Authorization:`${localStorage.getItem('authToken')}`
+            }
+          })
+          
+        }
+      }
+      catch(error){
+        console.log(error)
+      }
+    },
+
+    async bookService(service) {
+      try {
+        const response = await axios.post('/request_service', { "service_id": service.service_id, "service_name": service.service_name },
+          {
+            headers: {
+              Authorization: `${localStorage.getItem('authToken')}`
+            }
+          })
+        if (response.status === 200) {
+          this.serviceRequests.push(
+            {
+              request_id: response.data.request_id,
+              service_name: service.service_name,
+              pro_email: response.data.pro_email,
+              status: response.data.status,
+              closed_date: response.data.closed_date,
+              request_date: response.data.request_date,
+              schedule_date: response.data.schedule_date
+            }
+          )
+        }
+      }
+      catch (error) {
+        if (error.response.status === 404 || error.response.status === 400) {
+          this.alert = error.response.data.message;
+          setTimeout(() => {
+            this.alert = ''
+          }, 2000
+          )
+        }
+      }
+    },
+    formatDate(date) {
+      const option = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(date).toLocaleDateString('en', option);
+    },
+    async cancelRequest(record){
+      try {
+        const response = await axios.delete(`/cancel_request/${record.request_id}`,
+          {
+            headers: {
+              Authorization: `${localStorage.getItem('authToken')}`
+            }
+          })
+        if (response.status === 200) {
+          this.serviceRequests = this.serviceRequests.filter(request => request.request_id !== record.request_id);
+        }
+      }
+      catch (error) {
+        if(error.response.status === 404){
+          this.alert = error.response.message
+          setTimeout(()=>{
+            this.alert=''
+          },3000)
+        }
+      }
+    }
   },
+
+  computed: {
+    cleaningServices() {
+      return this.services.filter(service => service.service_category === 'Cleaning');
+    },
+    healthServices() {
+      return this.services.filter(service => service.service_category === 'Health and Wellness')
+    },
+    saloonServices() {
+      return this.services.filter(service => service.service_category === 'Saloon')
+    },
+    electricianServices() {
+      return this.services.filter(service => service.service_category === 'Electrician')
+    },
+    homedecorServices() {
+      return this.services.filter(service => service.service_category === 'Home Decoration')
+    },
+
+  },
+  async mounted() {
+    try {
+      const response = await axios.get('http://localhost:5000/customer_dashboard', {
+        headers: {
+          Authorization: `${localStorage.getItem('authToken')}`
+        }
+      });
+
+      if (response.status === 200) {
+        this.profile = response.data.profile;
+        this.services = response.data.services;
+        this.serviceRequests = response.data.service_req;
+        console.log(this.serviceRequests)
+      }
+    }
+    catch (error) {
+      if (error.response.status === 401) {
+        this.$router.push({ name: 'CustomerLogin', query: { 'message': "Please login to continue" } });
+      }
+    }
+  }
 };
 </script>
 
@@ -142,8 +344,7 @@ export default {
   background-color: #333;
   color: white;
   padding: 10px;
-  position: relative;
-  margin-top:-80px;
+  margin-top: -80px;
 }
 
 .navbar h1 {
@@ -157,20 +358,28 @@ export default {
   font-size: 19px;
 }
 
+.profile-table tbody tr td {
+  padding-top: 0px;
+  padding-bottom: 0px;
+
+}
+
 .profile {
   position: relative;
   margin-top: 20px;
+  z-index: 1;
 }
 
 .prof-button {
   padding: 10px 20px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 8%;
-    float: right;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 8%;
+  float: right;
+  z-index: 2;
 }
 
 .prof-button:hover {
@@ -181,28 +390,52 @@ export default {
   position: absolute;
   top: 50px;
   right: 0;
-  background-color: #f9f9f9;
-  width: 250px;
+  background-color: beige;
+  width: 323px;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  padding: 20px;
+  padding: 9px;
+  z-index: 1000;
 }
 
 .services {
   margin-top: 30px;
+  margin-bottom: 70px;
+}
+
+.dropdown-content button.book {
+  width: 85px;
+  height: 40px;
+  font-size: 17px;
+  padding: 12px;
+  background-color: #1ed3cd;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.service-categories {
+  display: flex;
+  gap: 56px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
 }
 
 .dropdown {
-  margin: 10px 0;
+  position: relative;
 }
 
 .dropdown button {
-  padding: 10px;
+  padding: 22px;
   background-color: #4CAF50;
   color: white;
   border: none;
   cursor: pointer;
   border-radius: 5px;
+  font-size: 18px;
+  width: 191px;
 }
 
 .dropdown button:hover {
@@ -211,14 +444,16 @@ export default {
 
 .dropdown-content {
   display: none;
+  position: absolute;
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   padding: 15px;
+  width: 100%;
 }
 
 .dropdown:hover .dropdown-content {
-  display: block;
+  display: table;
 }
 
 .btn {
@@ -243,8 +478,9 @@ export default {
   margin-top: 20px;
 }
 
-.table th, .table td {
-  padding: 10px;
+.table th,
+.table td {
+  padding: 7px;
   border: 1px solid #ddd;
   text-align: left;
 }
@@ -263,5 +499,9 @@ export default {
   color: red;
   font-size: 1.2em;
   margin-top: 20px;
+}
+
+td {
+  padding: 13px;
 }
 </style>

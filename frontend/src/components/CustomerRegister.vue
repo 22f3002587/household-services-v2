@@ -32,12 +32,12 @@
 
       <div class="form-group">
         <label for="contact">Contact Number</label>
-        <input type="text" id="contact" v-model="form.contact" required />
+        <input type="text" id="contact" maxlength="10" v-model="form.contact" required />
       </div>
 
       <div class="form-group">
         <label for="pincode">Pincode</label>
-        <input type="text" id="pincode" v-model="form.pincode" required />
+        <input type="text" id="pincode" maxlength="6" v-model="form.pincode" required />
       </div>
 
       <div v-if="errorMessage" class="error-message">

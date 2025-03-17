@@ -295,7 +295,7 @@ export default {
 
     async block_unblock(record) {
       try {
-        // Send the block/unblock request
+    
         const response = await axios.put(
           `http://localhost:5000/admin/block_unblock_user/${record.id}`,
           {},

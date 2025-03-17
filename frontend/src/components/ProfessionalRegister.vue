@@ -47,7 +47,7 @@
 
     <div class="form-group">
       <label for="pincode">Pincode</label>
-      <input type="text" id="pincode" v-model="form.pincode" required />
+      <input type="text" id="pincode" v-model="form.pincode" maxlength="6" required />
     </div>
     <p style="color:red;" v-if="errorMessage">{{errorMessage}}</p>
 

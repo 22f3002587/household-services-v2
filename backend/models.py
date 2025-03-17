@@ -42,8 +42,8 @@ class Service_Request(db.Model):
     customer_id=db.Column(db.String(), db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     professional_id=db.Column(db.String(), db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     req_date=db.Column(db.DateTime, unique=False, default=dt.utcnow)
-    schedule_date=db.Column(db.DateTime, unique=False, default=dt.utcnow)
-    close_date= db.Column(db.DateTime, unique=False, default=dt.utcnow)
+    schedule_date=db.Column(db.DateTime, unique=False)
+    close_date= db.Column(db.DateTime, unique=False, nullable=True)
     status=db.Column(db.String(), default='Requested')
 
 
