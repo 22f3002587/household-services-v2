@@ -326,11 +326,16 @@ def create_routes(app):
     @auth_required('token')
     @roles_required('customer')
     def search_services():
-        if request.method == 'GET':
-            serv = Services.query.filter_by()
-            pro = Professional.query.filter_by() 
-
+        if request.method == 'GET': 
+            services_list = []
+            serv = Services.query.filter(Professional.service_name == Services.service_name).all()
+            for service in serv:
+                pro = Professional.query.filter_by(service_name = service.service_name).first()
+                services_list.append({'service_category':service.service_category, 'service_name':service.service_name, 'rating':pro.rating, 'description':service.description, 'base_price':service.base_price})
+            return jsonify({'services':services_list})    
+        
         if request.method == 'POST':
+    
             return 'post'       
 
     # Professional Routes

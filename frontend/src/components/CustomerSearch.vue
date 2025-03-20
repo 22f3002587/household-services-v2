@@ -3,12 +3,11 @@
       <nav class="navbar">
         <h1>Customer Dashboard</h1>
         <div>
-          <router-link :to="{name:'CustomerHome'}">Home</router-link>
-          <router-link :to="{name:'HomePage'}" @click="logoutuser">Logout</router-link>
+          <router-link :to="{ name: 'CustomerHome' }">Home</router-link>
+          <router-link :to="{ name: 'HomePage' }" @click="logoutuser">Logout</router-link>
         </div>
       </nav>
   
-
       <div class="content">
         <h3>Search for a service</h3>
         <form @submit.prevent="searchServices">
@@ -21,22 +20,22 @@
           <input type="text" v-model="searchQuery" placeholder="Enter service..." required>
         </form>
   
-        
-        <table v-if="services.length">
+        <table v-if="filteredServices.length">
           <thead>
             <tr>
               <th>Service Category</th>
               <th>Service Name</th>
+              <th>Rating</th>
               <th>Description</th>
               <th>Price</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="record in services" :key="record.service_id">
+            <tr v-for="record in filteredServices" :key="record.service_id">
               <td>{{ record.service_category }}</td>
               <td>{{ record.service_name }}</td>
-              <td>{{ record.rating }}</td>
+              <td>{{ record.rating }} of 5</td>
               <td>{{ record.description }}</td>
               <td>Rs. {{ record.base_price }}</td>
               <td>
@@ -45,14 +44,14 @@
             </tr>
           </tbody>
         </table>
-        <p v-if="services.length === 0">No services found.</p>
+        <p v-if="filteredServices.length === 0">No services found.</p>
       </div>
     </div>
   </template>
   
   <script>
-import axios from 'axios';
-
+  import axios from 'axios';
+  
   export default {
     data() {
       return {
@@ -62,12 +61,26 @@ import axios from 'axios';
         customerEmail: "customer@example.com", // Replace with actual user data
       };
     },
-    methods: {
-
-      logoutuser() {
-        localStorage.removeItem('authToken')
+    computed: {
+      filteredServices() {
+        if (!this.searchQuery) return this.services;
+  
+        return this.services.filter((service) => {
+          const query = this.searchQuery.toLowerCase();
+          if (this.searchType === 'service_name') {
+            return service.service_name.toLowerCase().includes(query);
+          } else if (this.searchType === 'service_category') {
+            return service.service_category.toLowerCase().includes(query);
+          }
+          return true;
+        });
       },
-
+    },
+    methods: {
+      logoutuser() {
+        localStorage.removeItem('authToken');
+      },
+  
       async bookService(serviceId) {
         try {
           const response = await fetch("/customer_search", {
@@ -87,23 +100,22 @@ import axios from 'axios';
         }
       },
     },
-    async mounted(){
-      try{
-        const response = await axios.get('',{
-          headers:{
-            Authorization:`${localStorage.getItem('authToken')}`
-          }
-        })
-        if(response.status === 200){
-          console.log('success')
+    async mounted() {
+      try {
+        const response = await axios.get('http://localhost:5000/search_services', {
+          headers: {
+            Authorization: `${localStorage.getItem('authToken')}`,
+          },
+        });
+        if (response.status === 200) {
+          this.services = response.data.services;
+        }
+      } catch (error) {
+        if (error.response.status === 401) {
+          this.$router.push({ name: 'CustomerLogin', query: { message: 'You need to login first' } });
         }
       }
-      catch(error){
-        if(error.response.status === 401){
-          this.$router.push({name:'CustomerLogin', query:{'message':'You need to login first'}})
-        }
-      }
-    }
+    },
   };
   </script>
   
@@ -212,6 +224,7 @@ import axios from 'axios';
     border: none;
     cursor: pointer;
     border-radius: 5px;
+    width:auto;
   }
   
   .btn:hover {
