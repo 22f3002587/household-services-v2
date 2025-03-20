@@ -64,6 +64,7 @@
               <table v-if="cleaningServices.length > 0">
                 <tr v-for="service in cleaningServices" :key="service.service_id">
                   <td>{{ service.service_name }}</td>
+                  <td style="color: brown;">{{ service.rating !== null ? `${service.rating} of 5`: "No data"}} </td>
                   <td>{{ service.description }}</td>
                   <td>Rs. {{ service.price }}</td>
                   <td><button class="book" @click="bookService(service)" type="submit">Book</button></td>
@@ -80,6 +81,7 @@
               <table v-if="healthServices.length > 0">
                 <tr v-for="service in healthServices" :key="service.service_id">
                   <td>{{ service.service_name }}</td>
+                  <td style="color: brown;">{{ service.rating !== null ? `${service.rating} of 5`: "No data"}} </td>
                   <td>{{ service.description }}</td>
                   <td>Rs. {{ service.price }}</td>
                   <td><button class="book" @click="bookService(service)" type="submit">Book</button></td>
@@ -96,6 +98,7 @@
               <table v-if="saloonServices.length > 0">
                 <tr v-for="service in saloonServices" :key="service.service_id">
                   <td>{{ service.service_name }}</td>
+                  <td style="color: brown;">{{ service.rating !== null ? `${service.rating} of 5`: "No data"}} </td>
                   <td>{{ service.description }}</td>
                   <td>Rs. {{ service.price }}</td>
                   <td><button class="book" @click="bookService(service)" type="submit">Book</button></td>
@@ -110,8 +113,9 @@
             <button>Home Decoration</button>
             <div class="dropdown-content">
               <table v-if="homedecorServices.length > 0">
-                <tr v-for="service in hServices" :key="service.service_id">
+                <tr v-for="service in homedecorServices" :key="service.service_id">
                   <td>{{ service.service_name }}</td>
+                  <td style="color: brown;">{{ service.rating !== null ? `${service.rating} of 5`: "No data"}} </td>
                   <td>{{ service.description }}</td>
                   <td>Rs. {{ service.price }}</td>
                   <td><button class="book" @click="bookService(service)" type="submit">Book</button></td>
@@ -128,6 +132,7 @@
               <table v-if="electricianServices.length > 0">
                 <tr v-for="service in electricianServices" :key="service.service_id">
                   <td>{{ service.service_name }}</td>
+                  <td style="color: brown;">{{ service.rating !== null ? `${service.rating} of 5`: "No data"}} </td>
                   <td>{{ service.description }}</td>
                   <td>Rs. {{ service.price }}</td>
                   <td><button class="book" @click="bookService(service)">Book</button></td>
@@ -140,6 +145,7 @@
     </div>
 
     <p v-if="alert" class="alert">{{ alert }}</p>
+    <p v-if="ext_msg" class="alert">{{this.$route.query.message}}</p>
 
     <div class="table">
       <p class="request-title">Requested Services: </p>
@@ -163,12 +169,12 @@
             <td>{{ record.pro_email }}</td>
             <td>{{ formatDate(record.request_date) }}</td>
             <td>{{ formatDate(record.schedule_date) }}</td>
-            <td>{{ record.closed_date ? formatDate(record.closed_date) : 'Closing Date Pending' }}</td>
+            <td>{{ record.close_date ? formatDate(record.close_date) : 'Closing Date Pending' }}</td>
             <td>{{ record.status }}</td>
             <td>
               <button style="width:72px;" v-if="record.status === 'Requested'" @click="handleAction(record, 'close')">Close it?</button>
-              <button style="width:97px; margin:0 14px; background-color: cornflowerblue;" v-if="record.status === 'Requested'" @click="handleAction(record, 'edit')">Edit Request</button>
-              <button style="width:60px;" v-if="record.status === 'Requested' || record.status !== 'Closed by customer'" @click="cancelRequest(record)"
+              <button style="width:97px; margin:0 14px; background-color: cornflowerblue;" v-if="record.status === 'Requested'" @click="showform=true; req_id=record.request_id">Edit Request</button>
+              <button style="width:60px;" v-if="record.status === 'Requested' " @click="cancelRequest(record)"
                 class="delete-button">Cancel</button>
             </td>
           </tr>
@@ -176,6 +182,12 @@
       </table>
       <p v-else>Your service request is empty</p>
     </div>
+    <form style="margin-top:35px;" v-if="showform == true">
+      <label for="schedule">Enter new schedule date:</label><br>
+      <input style="width:103px;" type="date" v-model="newSchedule"><br>
+      <button style="width:97px;" @click="handleAction(this.req_id, 'edit')">Save</button>
+    </form>
+
   </div>
 </template>
 
@@ -191,6 +203,11 @@ export default {
       services: [],
       serviceRequests: [],
       isProfileDropdownVisible: false,
+      showform:false,
+      newSchedule:'',
+      req_id:'',
+      ratingform: false,
+      ext_msg:false
     };
   },
   methods: {
@@ -214,17 +231,24 @@ export default {
           if (close.status === 200) {
             const updatedRequest = this.serviceRequests.find(request => request.request_id === record.request_id);
             updatedRequest.status = 'Closed by customer';
+            updatedRequest.close_date = new Date().toLocaleDateString('en',{year:'numeric', month:'long', day:'numeric'})
+            this.$router.push({name:'ProRating', query:{"service_name": record.service_name}})
           }
           
         }
 
 
         if(action == 'edit'){
-          const edit = await axios.put(`/close_edit_request/edit/${record.request_id}`,{
+          const edit = await axios.put(`/close_edit_request/edit/${this.req_id}`,{"schedule_date":this.newSchedule},{
             headers:{
               Authorization:`${localStorage.getItem('authToken')}`
             }
           })
+
+          if(edit.status === 200){
+            const updateDate = this.serviceRequests.find(request=> request.request_id === record)
+            updateDate.schedule_date = new Date(this.newSchedule) 
+          }
           
         }
       }
@@ -322,13 +346,20 @@ export default {
         this.profile = response.data.profile;
         this.services = response.data.services;
         this.serviceRequests = response.data.service_req;
-        console.log(this.serviceRequests)
       }
     }
     catch (error) {
       if (error.response.status === 401) {
         this.$router.push({ name: 'CustomerLogin', query: { 'message': "Please login to continue" } });
       }
+    }
+
+    if(this.$route.query.message){
+      this.ext_msg = true
+      setTimeout(() => {
+          this.ext_msg = false
+          
+      }, 3000);
     }
   }
 };

@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from flask_security import auth_required, roles_required, current_user, hash_password, verify_password
 from backend.models import db, Services, User, Role, Professional, Customer, Service_Request
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 import uuid
 from datetime import datetime as dt, timedelta
 
@@ -235,7 +235,9 @@ def create_routes(app):
 
         services_list = []
         for serv in Services.query.all():
-            services_list.append({"service_id":serv.service_id, "service_name":serv.service_name, "service_category":serv.service_category, "price":serv.base_price, "expected_time":serv.expected_time, "description":serv.description})
+            pro = Professional.query.filter_by(service_name = serv.service_name).first()
+            
+            services_list.append({"service_id":serv.service_id, "service_name":serv.service_name, "service_category":serv.service_category, "price":serv.base_price, "rating":pro.rating if pro else None, "description":serv.description})
 
         return jsonify({"profile":{"name": current_user.fullname, "email": current_user.email, "contact":custom.contact, "address":custom.address, "pincode":custom.pin_code},
                         "service_req":serv_req_list, "services":services_list}), 200
@@ -282,6 +284,7 @@ def create_routes(app):
         if serv_req:
             if action == 'close':
                 serv_req.status = 'Closed by customer'
+                serv_req.close_date = dt.utcnow()
                 db.session.commit()
                 return jsonify({'message':'Closed by customer'}), 200
 
@@ -293,9 +296,42 @@ def create_routes(app):
                 return jsonify({'message':"New date scheduled successfully"}), 200
         
         return jsonify({'message':'Service request not found'}), 404
-
-
+    
+    @app.route('/pro_remarks/<string:service_name>', methods=['GET','POST'])
+    @auth_required('token')
+    @roles_required('customer')
+    def pro_remarks(service_name):
+        if request.method == 'GET':
+            service = Services.query.filter_by(service_name = service_name).first()
+            if service:
+                return jsonify({'pro_name':User.query.filter(Professional.query.filter_by(service_name = service_name).first().user_id == User.id).first().fullname,
+                                'service_name':service.service_name,
+                                'pro_email':User.query.filter(Professional.query.filter_by(service_name = service_name).first().user_id == User.id).first().email,
+                                'experience':Professional.query.filter_by(service_name=service_name).first().experience
+                            })
             
+        if request.method == 'POST':
+            data = request.get_json()
+            rating = data.get('rating')
+            pro = Professional.query.filter_by(service_name = service_name).first()
+            if pro:
+                pro.rating = rating
+                db.session.commit()
+                return jsonify({'message':'Rating added sucessfully'}), 200
+            
+            return jsonify({'message':'Not found'}), 404
+                
+
+    @app.route('/search_services', methods=['GET', 'POST'])
+    @auth_required('token')
+    @roles_required('customer')
+    def search_services():
+        if request.method == 'GET':
+            serv = Services.query.filter_by()
+            pro = Professional.query.filter_by() 
+
+        if request.method == 'POST':
+            return 'post'       
 
     # Professional Routes
 
@@ -367,15 +403,43 @@ def create_routes(app):
         pro_detail={"name": pro.fullname, "email": pro.email, "experience":pro_info.experience, "address":pro_info.address, "service_name": pro_info.service_name}
 
         custom_list=[]
-        serv_req = Service_Request.query.filter_by(professional_id=pro.id).all()
+        serv_req = Service_Request.query.filter_by(professional_id=pro.id, status = 'Requested').all()
         for req in serv_req:
             custom1=User.query.get(req.customer_id)
             custom2=Customer.query.filter_by(user_id=custom1.id).first()
             
-            custom_list.append({"customer_name":custom1.fullname, "customer_email":custom1.email, "contact":custom2.contact, "address":custom2.address, "schedule_date":req.schedule_date})
+            custom_list.append({"service_id":req.service_id, "request_id":req.request_id, "customer_name":custom1.fullname, "customer_email":custom1.email, "contact":custom2.contact, "address":custom2.address, "schedule_date":req.schedule_date})
 
         closed_req = []
         close_serv = Service_Request.query.filter(or_(Service_Request.status == 'Closed by customer', Service_Request.status == 'Dismissed by professional'), Service_Request.professional_id == pro.id).all()
         for req in close_serv:
-            closed_req.append({"customer_name":User.query.get(req.customer_id).fullname, "schedule_date":req.schedule_date, "status":req.status})
-        return jsonify({"pro_detail":pro_detail, "service_req":custom_list, "closed_req":closed_req}), 200
+            closed_req.append({"customer_name":User.query.get(req.customer_id).fullname, "service_id":req.service_id, "status":req.status, "request_id":req.request_id})
+
+        accept_req = []
+        accept_serv = Service_Request.query.filter_by(professional_id = current_user.id, status='Accepted by professional').all()
+        for accept in accept_serv:
+            accept_req.append({"request_id":accept.request_id, "customer_name":User.query.get(accept.customer_id).fullname, "service_id":accept.service_id, "status":accept.status})
+        return jsonify({"pro_detail":pro_detail, "service_req":custom_list, "closed_req":closed_req ,"accept_req":accept_req}), 200
+    
+        
+    
+    @app.route('/serv_req/<string:action>', methods=['PUT'])
+    @auth_required('token')
+    @roles_required('professional')
+    def req_accept_dismiss(action):
+
+        data=request.get_json()
+        print(data,action)
+        req_id = data.get('req_id')
+
+        req = Service_Request.query.filter_by(request_id=req_id).first()
+        if req:
+            if action == 'Accept':
+                req.status = "Accepted by professional"
+
+            if action == 'Dismiss':
+                req.status = "Dismissed by professional"    
+
+            db.session.commit()
+            return jsonify({"message":"Status added successfully", "status":req.status}), 200
+        return jsonify({"message":"Record not found"}), 404

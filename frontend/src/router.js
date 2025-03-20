@@ -11,6 +11,8 @@ import AddService from './components/AddService.vue'
 import AdminSearch from './components/AdminSearch.vue'
 import ProHome from './components/ProfessionalHome.vue'
 import AdminSummary from './components/AdminSummary.vue'
+import CustomerSearch from './components/CustomerSearch.vue'
+import ProRating from './components/ProfessionalRating.vue'
 
 const routes=[
     {name:'HomePage', path:'/', component: HomePage},
@@ -24,7 +26,9 @@ const routes=[
     {name:'AdminLogin', path:'/admin_login', component:AdminLogin},
     {name:'AdminHome', path:'/admin_dashboard',component:AdminHome},
     {name:'AdminSearch', path:'/admin_search',component:AdminSearch},
-    {name:'AdminSummary', path:'/admin_summary',component:AdminSummary}
+    {name:'AdminSummary', path:'/admin_summary',component:AdminSummary},
+    {name:'CustomSearch', path:'/customer_search', component:CustomerSearch},
+    {name:'ProRating', path:'/pro_remarks', component:ProRating}
     
 ]
 

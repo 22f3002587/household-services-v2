@@ -3,8 +3,8 @@
         <div class="navbar">
             <h2>Welcome to Professional Dashboard</h2>
             <div style="margin-left:22%" class="navbar-links">
-                <router-link :to="{name:'ProHome'}">Home</router-link>
-                <router-link :to="{name:'HomePage'}" @click="logoutUser">Logout</router-link>
+                <router-link :to="{ name: 'ProHome' }">Home</router-link>
+                <router-link :to="{ name: 'HomePage' }" @click="logoutUser">Logout</router-link>
             </div>
         </div>
 
@@ -20,7 +20,8 @@
                         <table class="service-table">
                             <thead>
                                 <tr>
-                                    <th>Customer Email</th>
+                                    <th>Request ID</th>
+                                    <th>Service ID</th>
                                     <th>Customer Name</th>
                                     <th>Contact No.</th>
                                     <th>Address</th>
@@ -30,14 +31,15 @@
                             </thead>
                             <tbody>
                                 <tr v-for="(record, index) in customer_details" :key="index">
-                                    <td>{{ record.customer_email }}</td>
+                                    <td>{{ record.request_id}}</td>
+                                    <td>{{ record.service_id }}</td>
                                     <td>{{ record.customer_name }}</td>
                                     <td>{{ record.contact }}</td>
                                     <td>{{ record.address }}</td>
                                     <td>{{ record.schedule_date }}</td>
                                     <td>
-                                        <button>Accept</button> 
-                                        <button>Dismiss</button>
+                                        <button @click="handleAction(record.request_id, 'Accept')">Accept</button>
+                                        <button @click="handleAction(record.request_id, 'Dismiss')">Dismiss</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -56,27 +58,54 @@
                                 <tr>
                                     <th>Request ID</th>
                                     <th>Service ID</th>
-                                    <th>Customer ID</th>
-                                    <th>Action</th>
+                                    <th>Customer Name</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="(record, index) in closed_services" :key="index">
                                     <td>{{ record.request_id }}</td>
                                     <td>{{ record.service_id }}</td>
-                                    <td>{{ record.customer_id }}</td>
+                                    <td>{{ record.customer_name }}</td>
+                                    <td>{{ record.status }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                     <p v-else class="message">No service closed yet</p>
                 </div>
+
+                <div class="closed-services">
+                    <h3 class="heading">Accepted Services</h3>
+                    <div v-if="accept_services.length">
+                        <table class="service-table">
+                            <thead>
+                                <tr>
+                                    <th>Request ID</th>
+                                    <th>Service ID</th>
+                                    <th>Customer Name</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(record, index) in accept_services" :key="index">
+                                    <td>{{ record.request_id}}</td>
+                                    <td>{{ record.service_id }}</td>
+                                    <td>{{ record.customer_name }}</td>
+                                    <td>{{ record.status }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p v-else class="message">No request accepted yet</p>
+                </div>
             </div>
 
 
             <div class="sidebar">
                 <div>
-                    <img src="https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=" alt="user-image">
+                    <img src="https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o="
+                        alt="user-image">
                     <h3>Welcome {{ prof_data.name }}</h3>
                     <table>
                         <tbody>
@@ -116,12 +145,12 @@
 
 <script>
 import axios from "axios";
-// import { format } from 'date-fns'
 export default {
     data() {
         return {
             customer_details: [],
-            closed_services:[],
+            closed_services: [],
+            accept_services: [],
             alert: '',
             prof_data: ''
         }
@@ -129,6 +158,44 @@ export default {
     methods: {
         logoutUser() {
             localStorage.removeItem('authToken')
+        },
+        async handleAction(id, action) {
+            const service = this.customer_details.find(data => data.request_id === id);
+            if (action === 'Accept') {
+                try {
+                    const response = await axios.put(`http://localhost:5000/serv_req/${action}`, { "req_id": id }, {
+                        headers: {
+                            Authorization: `${localStorage.getItem('authToken')}`
+                        }
+                    });
+                    if (response.status === 200) {
+                        // Move the service request from 'customer_details' to 'accept_services'
+                        service.status = response.data.status; // Update status
+                        this.accept_services.push(service); // Add to accepted services
+                        this.customer_details = this.customer_details.filter(data => data.request_id !== id); 
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+
+            if (action === 'Dismiss') {
+                try {
+                    const response = await axios.put(`http://localhost:5000/serv_req/${action}`, { "req_id": id }, {
+                        headers: {
+                            Authorization: `${localStorage.getItem('authToken')}`
+                        }
+                    });
+                    if (response.status === 200) {
+                        // Move the service request from 'customer_details' to 'closed_services'
+                        service.status = response.data.status; // Update status
+                        this.closed_services.push(service); // Add to closed services
+                        this.customer_details = this.customer_details.filter(data => data.request_id !== id); // Remove from pending requests
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
         }
     },
     async mounted() {
@@ -140,19 +207,19 @@ export default {
             });
 
             if (response.status === 200) {
-                this.prof_data = response.data.pro_detail
-                this.customer_details = response.data.service_req
-                this.closed_services = response.data.closed_req
-
+                this.prof_data = response.data.pro_detail;
+                this.customer_details = response.data.service_req;
+                this.closed_services = response.data.closed_req;
+                this.accept_services = response.data.accept_req;
             }
         } catch (error) {
             if (error.response.status === 401) {
                 this.$router.push({ name: 'ProLogin', query: { message: 'You need to sign in first' } });
             }
         }
-
     }
 }
+
 </script>
 
 <style scoped>
@@ -169,7 +236,7 @@ export default {
     align-items: flex-end;
     width: 96%;
     margin-top: -80px;
-    justify-content:flex-end;
+    justify-content: flex-end;
 }
 
 .navbar h2 {
@@ -307,7 +374,7 @@ span {
     border: 1px solid #ddd;
 }
 
-img{
+img {
     width: 43%;
     border-radius: 50%;
 }
@@ -354,7 +421,7 @@ img{
     font-weight: bold;
 }
 
-button{
+button {
     width: 38%;
     padding: 10px;
     background-color: #4CAF50;
