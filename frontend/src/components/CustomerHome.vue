@@ -220,6 +220,7 @@ export default {
     },
 
     async handleAction(record, action){
+      event.preventDefault()
       try{
         if(action == 'close'){
           const close = await axios.put(`/close_edit_request/close/${record.request_id}`,{},{
@@ -248,6 +249,7 @@ export default {
           if(edit.status === 200){
             const updateDate = this.serviceRequests.find(request=> request.request_id === record)
             updateDate.schedule_date = new Date(this.newSchedule) 
+            this.showform = false
           }
           
         }

@@ -1,4 +1,6 @@
 import {createRouter, createWebHistory} from 'vue-router'
+
+
 import HomePage from './components/HomePage.vue'
 import CustomerLogin from "./components/CustomerLogin.vue"
 import CustomerRegister from "./components/CustomerRegister.vue"
@@ -13,6 +15,7 @@ import ProHome from './components/ProfessionalHome.vue'
 import AdminSummary from './components/AdminSummary.vue'
 import CustomerSearch from './components/CustomerSearch.vue'
 import ProRating from './components/ProfessionalRating.vue'
+import ViewPro from './components/ViewPro.vue'
 
 const routes=[
     {name:'HomePage', path:'/', component: HomePage},
@@ -28,7 +31,8 @@ const routes=[
     {name:'AdminSearch', path:'/admin_search',component:AdminSearch},
     {name:'AdminSummary', path:'/admin_summary',component:AdminSummary},
     {name:'CustomSearch', path:'/customer_search', component:CustomerSearch},
-    {name:'ProRating', path:'/pro_remarks', component:ProRating}
+    {name:'ProRating', path:'/pro_remarks', component:ProRating},
+    {name:'ViewPro', path:'/view_pro', component:ViewPro}
     
 ]
 

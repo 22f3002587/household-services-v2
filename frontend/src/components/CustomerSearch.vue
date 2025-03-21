@@ -39,7 +39,7 @@
               <td>{{ record.description }}</td>
               <td>Rs. {{ record.base_price }}</td>
               <td>
-                <button class="btn" @click="bookService(record.service_id)">Book</button>
+                <button class="btn" @click="bookService(record)">Book</button>
               </td>
             </tr>
           </tbody>
@@ -58,12 +58,10 @@
         searchType: "",
         searchQuery: "",
         services: [],
-        customerEmail: "customer@example.com", // Replace with actual user data
       };
     },
     computed: {
       filteredServices() {
-        if (!this.searchQuery) return this.services;
   
         return this.services.filter((service) => {
           const query = this.searchQuery.toLowerCase();
@@ -80,25 +78,21 @@
       logoutuser() {
         localStorage.removeItem('authToken');
       },
-  
-      async bookService(serviceId) {
-        try {
-          const response = await fetch("/customer_search", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              form_id: "book",
-              service_id: serviceId,
-              customer_email: this.customerEmail,
-            }),
-          });
-  
-          const result = await response.json();
-          alert(result.message || "Service booked successfully!");
-        } catch (error) {
-          console.error("Error booking service:", error);
+
+      async bookService(record){
+        try{
+          const response = await axios.post('http://localhost:5000/request_service', {"service_id":record.service_id, "service_name":record.service_name}, {
+            headers:{
+              Authorization:`${localStorage.getItem('authToken')}`
+            }
+          })
+          if(response.status === 200){
+            this.$router.push({name:'CustomerHome', query:{"message":"Requested succesfully. Please wait for Professional response"}})
+          }
+        }catch(error){
+          console.log(error)
         }
-      },
+      }
     },
     async mounted() {
       try {

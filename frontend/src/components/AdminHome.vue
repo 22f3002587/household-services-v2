@@ -36,6 +36,7 @@
             <td>
               <button v-if="record.is_active" style="background-color: orangered" @click="accept_rejectPro(record)">Reject</button>
               <button v-else @click="accept_rejectPro(record)">Accept</button>
+              <button style="background-color:cornflowerblue;" @click="$router.push({name:'ViewPro', query:{'pro_id':record.id}})">View</button>
             </td>
           </tr>
         </tbody>

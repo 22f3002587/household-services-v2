@@ -177,6 +177,19 @@ def create_routes(app):
                          "totalCustomer":totalCustomer, "blockedCustomer":blockedCustomer, "activeCustomer":activeCustomer,
                          "totalreq":total_Servicereq, "pending_req":pending_req, "pro_dismissed":pro_dismiss, "complete_req":complete_req}), 200
 
+
+    @app.route('/admin/view_pro/<int:pro_id>', methods=['GET', 'POST'])
+    @auth_required('token')
+    @roles_required('admin')
+    def pro_view(pro_id):
+        user = User.query.get(pro_id)
+        if user:
+            pro = Professional.query.filter_by(user_id = user.id).first()
+            return jsonify({'fullname':user.fullname, "experience":pro.experience, "service_name":pro.service_name, "avg_rating":pro.rating if pro.rating != 0 else 0, "address":pro.address, "pincode":pro.pin_code, "email":user.email})
+        
+        return jsonify({'message':'No professional found'}), 404
+
+
     # Customer Routes
     @app.route('/register_customer', methods=['POST'])
     def register_customer():
@@ -280,7 +293,7 @@ def create_routes(app):
     @auth_required('token')
     @roles_required('customer')
     def close_edit_request(action, request_id):
-        serv_req = Service_Request.query.filter_by(request_id=request_id, customer_id =current_user.id).first()
+        serv_req = Service_Request.query.filter_by(request_id=request_id, customer_id = current_user.id).first()
         if serv_req:
             if action == 'close':
                 serv_req.status = 'Closed by customer'
@@ -289,11 +302,13 @@ def create_routes(app):
                 return jsonify({'message':'Closed by customer'}), 200
 
             if action == 'edit':
-                data=request.get_json()
-                schedule_date = data.get('schedule_date')
-                serv_req.schedule_date = schedule_date
-                db.session.commit()
-                return jsonify({'message':"New date scheduled successfully"}), 200
+                data = request.get_json()  
+                schedule_date = data.get('schedule_date')  
+
+                if schedule_date:
+                    serv_req.schedule_date = dt.strptime(schedule_date, '%Y-%m-%d').date()  
+                    db.session.commit()
+                    return jsonify({'message':'Updated successfully'})
         
         return jsonify({'message':'Service request not found'}), 404
     
@@ -331,7 +346,7 @@ def create_routes(app):
             serv = Services.query.filter(Professional.service_name == Services.service_name).all()
             for service in serv:
                 pro = Professional.query.filter_by(service_name = service.service_name).first()
-                services_list.append({'service_category':service.service_category, 'service_name':service.service_name, 'rating':pro.rating, 'description':service.description, 'base_price':service.base_price})
+                services_list.append({'service_id':service.service_id, 'service_category':service.service_category, 'service_name':service.service_name, 'rating':pro.rating, 'description':service.description, 'base_price':service.base_price})
             return jsonify({'services':services_list})    
         
         if request.method == 'POST':
