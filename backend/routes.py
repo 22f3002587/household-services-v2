@@ -1,11 +1,55 @@
-from flask import request, jsonify
+from flask import request, jsonify, render_template, send_file
 from flask_security import auth_required, roles_required, current_user, hash_password, verify_password
 from backend.models import db, Services, User, Role, Professional, Customer, Service_Request
-from sqlalchemy import or_, func
+from sqlalchemy import or_
 import uuid
 from datetime import datetime as dt, timedelta
+from backend.celery.tasks import add, create_csv
+from celery.result import AsyncResult
 
-def create_routes(app):
+
+def create_routes(app, cache):
+    @app.route('/cachedemo')
+    @cache.cached(timeout=50)
+    def cachedemo():
+        return jsonify({"date":dt.now()})
+    
+
+    @app.route('/celery')
+    def celery():
+        task = add.delay(10,20)
+        return {'task_id': task.id}
+    
+    @app.route('/get-celery-data/<id>')
+    def getData(id):
+        result = AsyncResult(id)
+
+        if result.ready():
+            return jsonify({'result': result.result}), 200
+        else:
+            return {'message': 'task not ready'}, 405
+
+
+    @app.route('/create_csv')
+    @auth_required('token')
+    @roles_required('admin')
+    def createCSV():
+        task = create_csv.delay()
+        return {'task_id':task.id}, 200
+    
+
+    @app.route('/get_csv/<task_id>')
+    @auth_required('token')
+    @roles_required('admin')
+    def getCSV(task_id):
+        result = AsyncResult(task_id)
+        if result.ready():
+            return send_file(f'./backend/celery/user-downloads/{result.result}'), 200
+        else:
+            return jsonify({'message':'task not ready'}), 405
+
+
+
     # Admin Routes
     @app.route('/admin_login', methods=['POST'])
     def admin_login():
@@ -25,6 +69,7 @@ def create_routes(app):
     @app.route('/admin_home')
     @auth_required('token')
     @roles_required('admin')
+    @cache.cached(timeout = 20)
     def admin_home():
         services = Services.query.all()
         service_list = [{"service_id": service.service_id, "service_name": service.service_name,
@@ -104,6 +149,7 @@ def create_routes(app):
         return jsonify({"message": "Service is in use"}), 400
 
     @app.route('/available_services')
+    @cache.cached(timeout = 300)
     def services():
         services = [service.service_name for service in Services.query.all()]
         return jsonify({"services": services})
@@ -155,6 +201,7 @@ def create_routes(app):
     @app.route('/admin_summary', methods=['GET'])
     @auth_required('token')
     @roles_required('admin')
+    @cache.cached(timeout = 120)
     def admin_summary():
         totalPro = Professional.query.count()
         pendingApprovals = Professional.query.filter_by(status='Waiting for admin approval..').count()
@@ -236,6 +283,7 @@ def create_routes(app):
     @app.route('/customer_dashboard', methods=['GET'])
     @auth_required('token')
     @roles_required('customer')
+    @cache.cached(timeout = 90)
     def customer_dashboard():
         custom=Customer.query.filter_by(user_id=current_user.id).first()
 
@@ -337,21 +385,19 @@ def create_routes(app):
             return jsonify({'message':'Not found'}), 404
                 
 
-    @app.route('/search_services', methods=['GET', 'POST'])
+    @app.route('/search_services', methods=['GET'])
     @auth_required('token')
     @roles_required('customer')
+    @cache.cached(timeout = 300)
     def search_services():
-        if request.method == 'GET': 
+        # if request.method == 'GET': 
             services_list = []
             serv = Services.query.filter(Professional.service_name == Services.service_name).all()
             for service in serv:
                 pro = Professional.query.filter_by(service_name = service.service_name).first()
                 services_list.append({'service_id':service.service_id, 'service_category':service.service_category, 'service_name':service.service_name, 'rating':pro.rating, 'description':service.description, 'base_price':service.base_price})
-            return jsonify({'services':services_list})    
-        
-        if request.method == 'POST':
-    
-            return 'post'       
+            return jsonify({'services':services_list}), 200   
+          
 
     # Professional Routes
 
@@ -417,6 +463,7 @@ def create_routes(app):
     @app.route('/professional_dashboard', methods=['GET'])
     @auth_required('token')
     @roles_required('professional')
+    @cache.cached(timeout = 60)
     def professional_dashboard():
         pro = current_user
         pro_info = Professional.query.filter_by(user_id=pro.id).first()
@@ -463,3 +510,4 @@ def create_routes(app):
             db.session.commit()
             return jsonify({"message":"Status added successfully", "status":req.status}), 200
         return jsonify({"message":"Record not found"}), 404
+    

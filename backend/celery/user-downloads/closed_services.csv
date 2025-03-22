@@ -1,0 +1,4 @@
+request_id,service_id,customer_id,professional_id,req_date,schedule_date,close_date,status
+5d0e,2,2,5,2025-03-21T11:14:51.850090,2025-03-23T11:14:51.849852,,Dismissed by professional
+2ae3,3,2,6,2025-03-22T05:13:01.699400,2025-03-24T05:13:01.696372,2025-03-22T05:13:17.842172,Closed by customer
+eb0f,4,2,7,2025-03-22T12:41:40.963132,2025-03-24T12:41:40.961341,2025-03-22T12:41:43.686141,Closed by customer

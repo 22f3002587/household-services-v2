@@ -4,6 +4,9 @@ from flask_cors import CORS
 from backend.models import db, User, Role
 from backend.config import Config
 from backend.routes import create_routes
+from flask_caching import Cache
+from backend.celery.celery_factory import celery_init_app
+import flask_excel as excel
 
 
 def CreateApp():
@@ -11,17 +14,26 @@ def CreateApp():
     app.config.from_object(Config)
 
     db.init_app(app)
+
+    cache = Cache(app)
+
+    excel.init_excel(app)
     CORS(app, resources={r"/*":{"origin":"http://localhost:8080"}})
 
     datastore = SQLAlchemyUserDatastore(db, User, Role)
 
     app.security = Security(app, datastore=datastore, register_blueprint=False)
     
+    
     with app.app_context():
-        create_routes(app)
+        create_routes(app, cache)
+
+    
     return app
 
 app = CreateApp()
+
+celery_app = celery_init_app(app)
 
 with app.app_context():
     db.create_all()

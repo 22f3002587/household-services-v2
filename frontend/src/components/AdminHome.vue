@@ -74,6 +74,7 @@
       <p style="color:red;" v-if="message1">{{ message1 }}</p>
     </div>
     <button style="width: 7%" @click="addService">Add Service</button>
+    <button style="width: 10%; background-color:dodgerblue;" @click="get_closed_service">Get closed services</button>
 
     <h3>Service Request:</h3>
     <div v-if="service_req.length === 0"><p>No Service Request Exist</p></div>
@@ -191,6 +192,22 @@ export default {
     };
   },
   methods: {
+    async get_closed_service(){
+      try{
+        const response = await axios.get('http://localhost:5000/create_csv',{
+          headers:{
+            Authorization:`${localStorage('authToken')}`
+          }
+        })
+        if(response.status === 200){
+          const task_id = response.data.task_id
+        }
+      }
+      catch(error){
+        console.log(error.message)
+      }
+    },
+    
     async accept_rejectPro(record){
       try {
         const response = await axios.put(`http://localhost:5000/admin/accept_reject_pro/${record.id}`,{}, {

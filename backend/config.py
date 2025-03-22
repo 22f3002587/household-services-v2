@@ -8,3 +8,26 @@ class Config:
     SECURITY_TOKEN_AUTHENTICATION = True
     SECURITY_TOKEN_AUTHENTICATION_HEADER='Authorization'
     SECURITY_TOKEN_AUTHENTICATION_METHODS = ["Token"]
+
+
+    CACHE_DEFAULT_TIMEOUT = 300
+    DEBUG = True
+    CACHING_TYPE = "RedisCache"
+    CACHE_REDIS_PORT = 6379
+
+
+    MAIL_SERVER = 'smtp.gmail.com'   # Use your SMTP provider
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USE_SSL = False
+    MAIL_USERNAME = 'shristi7897@gmail.com'  # Replace with your email
+    MAIL_PASSWORD = 'wvyp wviz aafx oyre'  # Replace with your email password
+    MAIL_DEFAULT_SENDER = 'shristi7897@gmail.com'
+
+
+    CELERY = {
+        "broker_url": "redis://localhost:6379/0",
+        "result_backend": "redis://localhost:6379/1",
+        "timezone": "Asia/Kolkata",
+        "task_ignore_result": True
+    }
