@@ -2,9 +2,9 @@
   <div>
     <div class="navbar">
       <h2>Welcome to Admin Panel</h2>
-      <router-link :to="{name:'HomePage'}" @click="logoutUser">Logout</router-link>
+      <router-link :to="{ name: 'HomePage' }" @click="logoutUser">Logout</router-link>
       <router-link to="/admin_search">Search</router-link>
-      <router-link :to="{name:'AdminSummary'}">Summary</router-link>
+      <router-link :to="{ name: 'AdminSummary' }">Summary</router-link>
       <router-link to="/admin_dashboard">Home</router-link>
     </div>
     <h3>Professional Details:</h3>
@@ -32,11 +32,13 @@
             <td>{{ record.service_name }}</td>
             <td>{{ record.experience }} years</td>
             <td>{{ record.address }}</td>
-            <td>{{ record.is_active ? 'Accept' : ( record.status === 'Waiting for admin approval..'? 'Waiting for response':'Reject') }}</td>
+            <td>{{ record.is_active ? 'Accept' : (record.status === 'Waiting for admin approval..' ? 'Waiting for response':'Reject') }}</td>
             <td>
-              <button v-if="record.is_active" style="background-color: orangered" @click="accept_rejectPro(record)">Reject</button>
+              <button v-if="record.is_active" style="background-color: orangered"
+                @click="accept_rejectPro(record)">Reject</button>
               <button v-else @click="accept_rejectPro(record)">Accept</button>
-              <button style="background-color:cornflowerblue;" @click="$router.push({name:'ViewPro', query:{'pro_id':record.id}})">View</button>
+              <button style="background-color:cornflowerblue;"
+                @click="$router.push({ name: 'ViewPro', query: { 'pro_id': record.id } })">View</button>
             </td>
           </tr>
         </tbody>
@@ -44,7 +46,9 @@
     </div>
 
     <h3>Services:</h3>
-    <div v-if="services.length === 0"><p>No Services Exist</p></div>
+    <div v-if="services.length === 0">
+      <p>No Services Exist</p>
+    </div>
     <div v-else>
       <table>
         <thead>
@@ -77,7 +81,9 @@
     <button style="width: 10%; background-color:dodgerblue;" @click="get_closed_service">Get closed services</button>
 
     <h3>Service Request:</h3>
-    <div v-if="service_req.length === 0"><p>No Service Request Exist</p></div>
+    <div v-if="service_req.length === 0">
+      <p>No Service Request Exist</p>
+    </div>
     <div v-else>
       <table class="service-req">
         <thead>
@@ -100,7 +106,7 @@
             <td>{{ record.request_date }}</td>
             <td>{{ record.close_date ? record.close_date : "Not closed yet" }} </td>
             <td>{{ record.status }}</td>
-            
+
           </tr>
         </tbody>
       </table>
@@ -108,7 +114,9 @@
     </div>
 
     <h3>Customer Details:</h3>
-    <div v-if="customer.length === 0"><p>No Customer Registered</p></div>
+    <div v-if="customer.length === 0">
+      <p>No Customer Registered</p>
+    </div>
     <div v-else>
       <table>
         <thead>
@@ -131,7 +139,8 @@
             <td>{{ record.gender }}</td>
             <td>{{ record.is_active ? 'Unblock' : 'Block' }}</td>
             <td>
-              <button v-if="record.is_active" style="background-color: orangered;" @click="block_unblock(record)">Block</button>
+              <button v-if="record.is_active" style="background-color: orangered;"
+                @click="block_unblock(record)">Block</button>
               <button v-else @click="block_unblock(record)">Unblock</button>
             </td>
           </tr>
@@ -160,7 +169,7 @@
         <button type="submit">Save Changes</button>
         <button type="button" @click="cancelEdit">Cancel</button>
 
-        <p v-if="message">{{message}}</p>
+        <p v-if="message">{{ message }}</p>
       </form>
     </div>
   </div>
@@ -177,7 +186,7 @@ export default {
       professional: [],
       customer: [],
       services: [],
-      service_req:[],
+      service_req: [],
       showEditForm: false,
       editService: {
         service_id: null,
@@ -192,171 +201,209 @@ export default {
     };
   },
   methods: {
-    async get_closed_service(){
-      try{
-        const response = await axios.get('http://localhost:5000/create_csv',{
-          headers:{
-            Authorization:`${localStorage('authToken')}`
-          }
-        })
-        if(response.status === 200){
-          const task_id = response.data.task_id
-        }
-      }
-      catch(error){
-        console.log(error.message)
-      }
-    },
-    
-    async accept_rejectPro(record){
-      try {
-        const response = await axios.put(`http://localhost:5000/admin/accept_reject_pro/${record.id}`,{}, {
-          headers: {
-            Authorization: `${localStorage.getItem("authToken")}`,
-          },
-        });
-        if(response.status === 200){
-          record.is_active = !record.is_active;
-          console.log(response.data.message);
-        }
+    async get_closed_service() {
+  try {
+    // Step 1: Request the server to create the CSV file
+    const response = await axios.get("http://localhost:5000/create_csv", {
+      headers: {
+        Authorization: `${localStorage.getItem("authToken")}`,
+      },
+    });
 
-    }catch (error) {
-        console.log(error.response.data.message);
-      }
-    },
+    if (response.status === 200) {
+      const task_id = response.data.task_id; 
 
-    Editservice(service) {
+      let fileReady = false;
+      let attempts = 0;
+      while (!fileReady && attempts < 10) { 
+        await new Promise((resolve) => setTimeout(resolve, 3000)); 
 
-      this.editService.service_id = service.service_id;
-      this.editService.expected_time = service.expected_time;
-      this.editService.price = service.price;
-      this.editService.service_category = service.service_category;
-      this.editService.service_name = service.service_name;
-      this.editService.description = service.description;
-      this.showEditForm = true;
-
-      this.$nextTick(()=>{
-      const scroll = document.getElementById("editForm")
-      scroll.scrollIntoView({behavior: "smooth"});
-    })
-    },
-
-    cancelEdit() {
-      this.showEditForm = false;
-    },
-
-    async submitEdit() {
-      try {
-        const editData = await axios.put(
-          `http://localhost:5000/admin/update_service/${this.editService.service_id}`,
-          this.editService,
+        // Check if the CSV file is ready
+        const checkResponse = await axios.get(
+          `http://localhost:5000/get_csv/${task_id}`,
           {
             headers: {
               Authorization: `${localStorage.getItem("authToken")}`,
             },
+            responseType: "blob", // Ensure we receive the file properly
           }
         );
 
-        if (editData.status === 200) {
-          this.message=editData.data.message;
-        }
-      } catch (error) {
-        if(error.response.status === 401){
-          this.$router.push({
-            name: "AdminLogin",
-            query: { message: "You need to sign in first" },
-          });
-        }
+        if (checkResponse.status === 200) {
+          fileReady = true; 
 
-        if(error.response.status === 400){
-          this.message = error.response.data.message;
-        }
-      }
-    },
-
-    logoutUser() {
-      localStorage.removeItem("authToken");
-    },
-
-    async deleteService(id) {
-      try {
-        const response = await axios.delete(`http://127.0.0.1:5000/admin/delete/${id}`, {
-          headers: {
-            Authorization: `${localStorage.getItem("authToken")}`,
-          },
-        });
-
-        if (response.status === 200) {
-          this.services = this.services.filter(service => service.service_id !== id);
-          this.message1 = response.data.message;
-          setTimeout(()=>{this.message1=''},2000)
-        }
-      } catch (error) {
-        if (error.response.status === 401) {
-          this.$router.push({
-            name: "AdminLogin",
-            query: { message: "You need to sign in first" },
-          });
-        }
-
-        if (error.response.status === 400) {
-          this.message1 = error.response.data.message;
-
-          setTimeout(()=>{this.message1=''},2000)
+          const fileURL = window.URL.createObjectURL(new Blob([checkResponse.data]));
+          const link = document.createElement("a");
+          link.href = fileURL;
+          link.setAttribute("download", "closed_services.csv"); 
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          attempts++;
         }
       }
-    },
 
-    addService() {
-      this.$router.push({ name:"AddService"});
-    },
-
-    async block_unblock(record) {
-      try {
-    
-        const response = await axios.put(
-          `http://localhost:5000/admin/block_unblock_user/${record.id}`,
-          {},
-          {
-            headers: {
-              Authorization: `${localStorage.getItem("authToken")}`,
-            },
-          }
-        );
-
-        if (response.status === 200) {
-          record.is_active = !record.is_active;
-          console.log(response.data.message);
-        }
-      } catch (error) {
-        console.log(error.message);
+      if (!fileReady) {
+        alert("CSV file generation is taking too long. Please try again later.");
       }
     }
-  },
+  } catch (error) {
+    console.error("Error generating CSV:", error);
+    alert("Failed to generate CSV. Please try again.");
+  }
+},
 
-  async mounted() {
-    try {
-      const response = await axios.get("http://127.0.0.1:5000/admin_home", {
+    
+  async accept_rejectPro(record){
+  try {
+    const response = await axios.put(`http://localhost:5000/admin/accept_reject_pro/${record.id}`, {}, {
+      headers: {
+        Authorization: `${localStorage.getItem("authToken")}`,
+      },
+    });
+    if (response.status === 200) {
+      record.is_active = !record.is_active;
+      console.log(response.data.message);
+    }
+
+  } catch (error) {
+    console.log(error.response.data.message);
+  }
+},
+
+Editservice(service) {
+
+  this.editService.service_id = service.service_id;
+  this.editService.expected_time = service.expected_time;
+  this.editService.price = service.price;
+  this.editService.service_category = service.service_category;
+  this.editService.service_name = service.service_name;
+  this.editService.description = service.description;
+  this.showEditForm = true;
+
+  this.$nextTick(() => {
+    const scroll = document.getElementById("editForm")
+    scroll.scrollIntoView({ behavior: "smooth" });
+  })
+},
+
+cancelEdit() {
+  this.showEditForm = false;
+},
+
+    async submitEdit() {
+  try {
+    const editData = await axios.put(
+      `http://localhost:5000/admin/update_service/${this.editService.service_id}`,
+      this.editService,
+      {
         headers: {
           Authorization: `${localStorage.getItem("authToken")}`,
         },
-      });
+      }
+    );
 
-      if (response.status === 200) {
-        this.professional = response.data.professional;
-        this.customer = response.data.customer;
-        this.services = response.data.services;
-        this.service_req = response.data.service_req;
-      }
-    } catch (error) {
-      if (error.response.status === 401) {
-        this.$router.push({
-          name: "AdminLogin",
-          query: { message: "You need to sign in first" },
-        });
-      }
+    if (editData.status === 200) {
+      this.message = editData.data.message;
+    }
+  } catch (error) {
+    if (error.response.status === 401) {
+      this.$router.push({
+        name: "AdminLogin",
+        query: { message: "You need to sign in first" },
+      });
+    }
+
+    if (error.response.status === 400) {
+      this.message = error.response.data.message;
     }
   }
+},
+
+logoutUser() {
+  localStorage.removeItem("authToken");
+},
+
+    async deleteService(id) {
+  try {
+    const response = await axios.delete(`http://127.0.0.1:5000/admin/delete/${id}`, {
+      headers: {
+        Authorization: `${localStorage.getItem("authToken")}`,
+      },
+    });
+
+    if (response.status === 200) {
+      this.services = this.services.filter(service => service.service_id !== id);
+      this.message1 = response.data.message;
+      setTimeout(() => { this.message1 = '' }, 2000)
+    }
+  } catch (error) {
+    if (error.response.status === 401) {
+      this.$router.push({
+        name: "AdminLogin",
+        query: { message: "You need to sign in first" },
+      });
+    }
+
+    if (error.response.status === 400) {
+      this.message1 = error.response.data.message;
+
+      setTimeout(() => { this.message1 = '' }, 2000)
+    }
+  }
+},
+
+addService() {
+  this.$router.push({ name: "AddService" });
+},
+
+    async block_unblock(record) {
+  try {
+
+    const response = await axios.put(
+      `http://localhost:5000/admin/block_unblock_user/${record.id}`,
+      {},
+      {
+        headers: {
+          Authorization: `${localStorage.getItem("authToken")}`,
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      record.is_active = !record.is_active;
+      console.log(response.data.message);
+    }
+  } catch (error) {
+    console.log(error.message);
+  }
+}
+  },
+
+  async mounted() {
+  try {
+    const response = await axios.get("http://127.0.0.1:5000/admin_home", {
+      headers: {
+        Authorization: `${localStorage.getItem("authToken")}`,
+      },
+    });
+
+    if (response.status === 200) {
+      this.professional = response.data.professional;
+      this.customer = response.data.customer;
+      this.services = response.data.services;
+      this.service_req = response.data.service_req;
+    }
+  } catch (error) {
+    if (error.response.status === 401) {
+      this.$router.push({
+        name: "AdminLogin",
+        query: { message: "You need to sign in first" },
+      });
+    }
+  }
+}
 };
 </script>
 
@@ -374,14 +421,14 @@ h3 {
   text-align: center;
 }
 
-.service-req tbody tr td{
-  padding:15px;
+.service-req tbody tr td {
+  padding: 15px;
 }
 
-.service-req thead tr th{
-  padding:35px;
-  padding-bottom:10px;
-  padding-top:0px;
+.service-req thead tr th {
+  padding: 35px;
+  padding-bottom: 10px;
+  padding-top: 0px;
 }
 
 td {
