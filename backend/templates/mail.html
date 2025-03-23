@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monthly Activity Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        .summary {
+            margin-bottom: 20px;
+        }
+        .summary p {
+            font-size: 14px;
+            color: #555;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Monthly Activity Report</h2>
+
+        <div class="summary">
+            <p><strong>Customer Name:</strong> {{ customer_name }}</p>
+            <p><strong>Total Services Requested:</strong> {{ requested_count }}</p>
+            <p><strong>Total Services Closed:</strong> {{ closed_count }}</p>
+        </div>
+
+        <table>
+            <tr>
+                <th>Service Category</th>
+                <th>Service Name</th>
+                <th>Status</th>
+                <th>Requested Date</th>
+                <th>Closed Date</th>
+            </tr>
+            {% for service in services %}
+            <tr>
+                <td>{{ service.service_category }}</td>
+                <td>{{ service.service_name }}</td>
+                <td>{{ service.status }}</td>
+                <td>{{ service.req_date }}</td>
+                <td>{{ service.closed_date }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+</body>
+</html>

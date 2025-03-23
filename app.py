@@ -10,7 +10,7 @@ import flask_excel as excel
 
 
 def CreateApp():
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder="backend/templates")
     app.config.from_object(Config)
 
     db.init_app(app)
