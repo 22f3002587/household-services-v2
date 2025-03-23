@@ -28,12 +28,15 @@ def CreateApp():
     with app.app_context():
         create_routes(app, cache)
 
+        celery_app = celery_init_app(app)
+
+        import backend.celery.celery_schedule
     
     return app
 
 app = CreateApp()
 
-celery_app = celery_init_app(app)
+celery_app = app.extensions['celery']
 
 with app.app_context():
     db.create_all()

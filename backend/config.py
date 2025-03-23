@@ -16,15 +16,6 @@ class Config:
     CACHE_REDIS_PORT = 6379
 
 
-    MAIL_SERVER = 'smtp.gmail.com'   # Use your SMTP provider
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USE_SSL = False
-    MAIL_USERNAME = 'shristi7897@gmail.com'  # Replace with your email
-    MAIL_PASSWORD = 'wvyp wviz aafx oyre'  # Replace with your email password
-    MAIL_DEFAULT_SENDER = 'shristi7897@gmail.com'
-
-
     CELERY = {
         "broker_url": "redis://localhost:6379/0",
         "result_backend": "redis://localhost:6379/1",
